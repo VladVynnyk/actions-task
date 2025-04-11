@@ -1,4 +1,4 @@
 
 
-![Build Status](https://github.com/VladVynnyk/actions-task/actions/workflows/Python application/badge.svg?branch=develop)
+![Build Status](https://github.com/VladVynnyk/actions-task/actions/workflows/ci.yml/badge.svg?branch=develop)
 
