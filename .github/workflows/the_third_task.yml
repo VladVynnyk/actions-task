@@ -63,7 +63,7 @@ jobs:
       - name: Replace badge
         id: check_badge
         run: |
-          WORKFLOW_FILE="ci.yml"
+          WORKFLOW_FILE="the_third_task.yml"
           BADGE_LINE="![Build Status](https://github.com/${{ github.repository }}/actions/workflows/${WORKFLOW_FILE}/badge.svg?branch=develop)"
 
           if grep -q '!\[Build Status\](https://github.com/.*/actions/workflows/.*badge.svg.*)' README.md; then
