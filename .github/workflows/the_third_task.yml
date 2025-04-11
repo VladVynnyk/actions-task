@@ -1,0 +1,84 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application
+
+on:
+  pull_request:
+    branches: [ "develop" ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov
+    - name: Test with pytest
+      run: |
+        pytest --cov=myapp --cov-fail-under=70 --cov-report=html
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: htmlcov/index.html
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        echo Build completed
+
+  update-readme:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Check if README already contains badge
+        id: check_badge
+        run: |
+          if grep -q "actions/workflows/ci.yml/badge.svg" README.md; then
+            echo "badge_exists=true" >> "$GITHUB_ENV"
+          else
+            echo "badge_exists=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Add badge to README if not exists
+        if: env.badge_exists == 'false'
+        run: |
+          echo "🔧 Adding build badge to README.md"
+          echo -e "\n![Build Status](https://github.com/${{ github.repository }}/actions/workflows/ci.yml/badge.svg)\n" >> README.md
+
+      - name: Commit and push changes to PR branch
+        if: env.badge_exists == 'false'
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git add README.md
+          git commit -m "Add CI badge to README"
+          git push origin HEAD:${{ github.head_ref }}        
