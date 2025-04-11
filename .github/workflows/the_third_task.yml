@@ -56,28 +56,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
 
-      - name: Check if README already contains badge
+      - name: Replace badge
         id: check_badge
         run: |
-          if grep -q "actions/workflows/ci.yml/badge.svg" README.md; then
-            echo "badge_exists=true" >> "$GITHUB_ENV"
+          BADGE_LINE="![Build Status](https://github.com/${{ github.repository }}/actions/workflows/${{ github.workflow }}/badge.svg?branch=develop)"
+
+          if grep -q '!\[Build Status\](https://github.com/.*/actions/workflows/.*badge.svg.*)' README.md; then
+            echo "Updating existing badge..."
+            sed -i 's|!\[Build Status\](https://github.com/.*/actions/workflows/.*badge.svg.*)|'"$BADGE_LINE"'|g' README.md
           else
-            echo "badge_exists=false" >> "$GITHUB_ENV"
+            echo "Adding new badge..."
+            echo -e "\n$BADGE_LINE\n" >> README.md
           fi
 
-      - name: Add badge to README if not exists
-        if: env.badge_exists == 'false'
-        run: |
-          echo "🔧 Adding build badge to README.md"
-          echo -e "\n![Build Status](https://github.com/${{ github.repository }}/actions/workflows/${{ github.workflow }}/badge.svg?branch=develop)\n" >> README.md
-
-
       - name: Commit and push changes to PR branch
-        if: env.badge_exists == 'false'
         run: |
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
